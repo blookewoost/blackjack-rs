@@ -1,5 +1,6 @@
 use bj::{Deck, Card, parse_unicode};
 const HIDDEN: &str = "U+1F0A0";
+const BLACKJACK: i32 = 21;
 
 fn main() {
 
@@ -77,10 +78,43 @@ fn display_game_status(dealer_cards: &Vec<Card>, player_cards: &Vec<Card>) {
         player_value += card.value;
     }
 
+    if player_value > BLACKJACK {
+        panic!("Dealer wins!");
+    }
     print!(":{}", player_value);
     
 }
 
 fn dealer_plays_to_end(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &mut Deck) {
+    
+    loop {
+        let mut dealer_value = 0; 
+        for card in dealer_cards.iter() {
+            dealer_value += card.value;
+        }
+
+        let mut player_value = 0;
+        for card in player_cards.iter() {
+            player_value += card.value;
+        }
+
+        if dealer_value > player_value && dealer_value < BLACKJACK {
+            println!("Dealer wins!");
+            break;
+        } else if dealer_value > BLACKJACK {
+            println!("Player wins!");
+            break;
+        } else {
+            dealer_cards.push(deck.cards.pop().unwrap());
+        }
+    }
+    
+}
+
+fn dealer_wins() {
+    todo!();
+}
+
+fn player_wins() {
     todo!();
 }
