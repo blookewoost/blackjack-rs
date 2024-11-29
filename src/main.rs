@@ -18,24 +18,32 @@ fn start_hand(mut deck: Deck) {
     dealer_cards.push(deck.cards.pop().unwrap());
     player_cards.push(deck.cards.pop().unwrap());
     dealer_cards.push(deck.cards.pop().unwrap());
-
-    println!("{} {}", dealer_cards[0].unicode, parse_unicode(HIDDEN).unwrap());
-    println!("-------");
-    println!("{} {}", player_cards[0].unicode, player_cards[1].unicode);
     
-    game_loop(&mut dealer_cards, &mut player_cards, &mut deck);
+    let result = game_loop(&mut dealer_cards, &mut player_cards, &mut deck);
+
+    match result {
+        EndGame::DealerWins => println!("You lose!"),
+        EndGame::PlayerWins => println!("You win!"),
+        EndGame::Tie => println!("You tied!"),
+    }
+
 }
 
 fn dealer_hit(mut dealer_cards: Vec<Card>, mut deck: Deck) {
     dealer_cards.push(deck.cards.pop().unwrap());
 }
 
-fn game_loop(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &mut Deck) {
+fn game_loop(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &mut Deck) -> EndGame {
     
     loop {
+        display_game_status(&dealer_cards[0], player_cards);
         let mut player_value = 0;
         for card in player_cards.iter() {
             player_value += card.value;
+        }
+        
+        if player_value > BLACKJACK {
+            return EndGame::DealerWins
         }
 
         let mut input = String::new();
@@ -47,30 +55,21 @@ fn game_loop(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &
                 player_cards.push(deck.cards.pop().unwrap());
             },
             "N\n" => {
-                dealer_plays_to_end(dealer_cards, player_cards, deck);
+                return dealer_plays_to_end(dealer_cards, player_cards, deck);
             },
             _ => {
                 panic!("Invalid input!");
             }
         }
-        display_game_status(dealer_cards, player_cards);
     }
     
     
 }
 
-fn display_game_status(dealer_cards: &Vec<Card>, player_cards: &Vec<Card>) {
-    let mut dealer_value = 0;
+fn display_game_status(dealer_card: &Card, player_cards: &Vec<Card>) {
+
     let mut player_value = 0;
-
-    for card in dealer_cards {
-        print!("{} ", card.unicode);
-        dealer_value += card.value;
-    }
-
-    print!(":{}", dealer_value);
-
-    println!("");
+    println!("{} {}", dealer_card.unicode, parse_unicode(HIDDEN).unwrap());
     println!("-------");
 
     for card in player_cards {
@@ -78,16 +77,14 @@ fn display_game_status(dealer_cards: &Vec<Card>, player_cards: &Vec<Card>) {
         player_value += card.value;
     }
 
-    if player_value > BLACKJACK {
-        panic!("Dealer wins!");
-    }
     print!(":{}", player_value);
-    
 }
 
-fn dealer_plays_to_end(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &mut Deck) {
+fn dealer_plays_to_end(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &mut Deck) -> EndGame {
     
     loop {
+        display_end_game_status(dealer_cards, player_cards);
+
         let mut dealer_value = 0; 
         for card in dealer_cards.iter() {
             dealer_value += card.value;
@@ -99,22 +96,37 @@ fn dealer_plays_to_end(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card
         }
 
         if dealer_value > player_value && dealer_value < BLACKJACK {
-            println!("Dealer wins!");
-            break;
+            return EndGame::DealerWins
         } else if dealer_value > BLACKJACK {
-            println!("Player wins!");
-            break;
+            return EndGame::PlayerWins
         } else {
             dealer_cards.push(deck.cards.pop().unwrap());
         }
     }
+}
+
+fn display_end_game_status(dealer_cards: &Vec<Card>, player_cards: &Vec<Card>) {
+    let mut player_value = 0;
+    let mut dealer_value = 0;
+
+    for card in dealer_cards{
+        print!("{} ", card.unicode);
+        dealer_value += card.value;
+    }
+
+    println!("    Dealer has {}", dealer_value);
     
+    for card in player_cards {
+        print!("{} ", card.unicode);
+        player_value += card.value;
+    }
+
+    println!("    Player has {}\n", player_value);
 }
 
-fn dealer_wins() {
-    todo!();
+enum EndGame {
+    PlayerWins,
+    DealerWins,
+    Tie
 }
 
-fn player_wins() {
-    todo!();
-}
