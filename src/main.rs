@@ -6,7 +6,6 @@ fn main() {
 
     let mut deck = Deck::new();
     deck.shuffle();
-
     start_hand(deck);
 }
 
@@ -29,10 +28,6 @@ fn start_hand(mut deck: Deck) {
 
 }
 
-fn dealer_hit(mut dealer_cards: Vec<Card>, mut deck: Deck) {
-    dealer_cards.push(deck.cards.pop().unwrap());
-}
-
 fn game_loop(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &mut Deck) -> EndGame {
     
     loop {
@@ -47,20 +42,24 @@ fn game_loop(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card>, deck: &
         }
 
         let mut input = String::new();
-        println!("You have {}, hit or stay? (Y/N)", player_value);
+        println!("You have {}, hit or stay? (y/n)", player_value);
         std::io::stdin().read_line(&mut input).unwrap();
 
-        match input.as_str() {
-            "Y\n" => {
-                player_cards.push(deck.cards.pop().unwrap());
-            },
-            "N\n" => {
-                return dealer_plays_to_end(dealer_cards, player_cards, deck);
-            },
-            _ => {
-                panic!("Invalid input!");
+        loop {
+            match input.as_str() {
+                "Y\n" | "y\n" => {
+                    player_cards.push(deck.cards.pop().unwrap());
+                    break;
+                },
+                "N\n" | "n\n" => {
+                    return dealer_plays_to_end(dealer_cards, player_cards, deck);
+                },
+                _ => {
+                    println!("unrecognized input. hit or stay? (y/n)");
+                }
             }
         }
+        
     }
     
     
@@ -99,6 +98,8 @@ fn dealer_plays_to_end(dealer_cards: &mut Vec<Card>, player_cards: &mut Vec<Card
             return EndGame::DealerWins
         } else if dealer_value > BLACKJACK {
             return EndGame::PlayerWins
+        } else if dealer_value == player_value {
+            return EndGame::Tie
         } else {
             dealer_cards.push(deck.cards.pop().unwrap());
         }
